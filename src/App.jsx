@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  Navigate,
+} from "react-router-dom";
 import ParticipantManagement from "./pages/ParticipantManagement";
 import RandomOrdering from "./pages/RandomOrdering";
 import ClubSelection from "./pages/ClubSelection";
@@ -12,7 +18,41 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import AuthButton from "./components/AuthButton";
 import { checkAndMigrateIfNeeded } from "./utils/userIdMigration";
 import { getTournamentSettings } from "./firebase/dbService";
+import { getTournamentId } from "./utils/tournamentContext";
 import "./App.css";
+
+// Conditional Route wrapper that redirects if feature is disabled
+function ConditionalRoute({ isEnabled, element, redirectTo = "/" }) {
+  if (!isEnabled) {
+    // Show a message instead of infinite redirects if we're already at the redirect target
+    if (window.location.pathname === redirectTo) {
+      return (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "50vh",
+            color: "#fff",
+            fontSize: "1.2rem",
+            textAlign: "center",
+            padding: "2rem",
+          }}
+        >
+          <div>
+            <p>This page has been disabled by the tournament administrator.</p>
+            <p style={{ fontSize: "1rem", marginTop: "1rem", opacity: 0.7 }}>
+              Please contact the admin or check the navigation menu for
+              available pages.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return <Navigate to={redirectTo} replace />;
+  }
+  return element;
+}
 
 function Navigation() {
   const { isAuthenticated, currentUser, loading } = useAuth();
@@ -30,10 +70,11 @@ function Navigation() {
   // Load settings from Firestore on mount and when user changes
   useEffect(() => {
     const loadSettings = async () => {
-      if (!currentUser) return;
+      const tournamentId = getTournamentId(currentUser);
+      if (!tournamentId) return;
 
       try {
-        const savedSettings = await getTournamentSettings(currentUser.uid);
+        const savedSettings = await getTournamentSettings(tournamentId);
         if (savedSettings) {
           setSettings(savedSettings);
         }
@@ -48,10 +89,11 @@ function Navigation() {
   // Listen for settings changes from Settings page
   useEffect(() => {
     const handleSettingsChange = async () => {
-      if (!currentUser) return;
+      const tournamentId = getTournamentId(currentUser);
+      if (!tournamentId) return;
 
       try {
-        const saved = await getTournamentSettings(currentUser.uid);
+        const saved = await getTournamentSettings(tournamentId);
         if (saved) {
           setSettings(saved);
         }
@@ -172,13 +214,69 @@ function Navigation() {
         </header>
         <main className="main">
           <Routes>
-            <Route path="/" element={<ParticipantManagement />} />
-            <Route path="/ordering" element={<RandomOrdering />} />
-            <Route path="/clubs" element={<ClubSelection />} />
-            <Route path="/groups" element={<GroupDraw />} />
-            <Route path="/tournament" element={<TournamentTable />} />
-            <Route path="/qualified" element={<QualifiedTeams />} />
-            <Route path="/knockout" element={<KnockoutStage />} />
+            <Route
+              path="/"
+              element={
+                <ConditionalRoute
+                  isEnabled={settings.participantManagementEnabled}
+                  element={<ParticipantManagement />}
+                />
+              }
+            />
+            <Route
+              path="/ordering"
+              element={
+                <ConditionalRoute
+                  isEnabled={settings.randomOrderingEnabled}
+                  element={<RandomOrdering />}
+                />
+              }
+            />
+            <Route
+              path="/clubs"
+              element={
+                <ConditionalRoute
+                  isEnabled={settings.clubSelectionEnabled}
+                  element={<ClubSelection />}
+                />
+              }
+            />
+            <Route
+              path="/groups"
+              element={
+                <ConditionalRoute
+                  isEnabled={settings.groupDrawEnabled}
+                  element={<GroupDraw />}
+                />
+              }
+            />
+            <Route
+              path="/tournament"
+              element={
+                <ConditionalRoute
+                  isEnabled={settings.tournamentTableEnabled}
+                  element={<TournamentTable />}
+                />
+              }
+            />
+            <Route
+              path="/qualified"
+              element={
+                <ConditionalRoute
+                  isEnabled={settings.qualifiedTeamsEnabled}
+                  element={<QualifiedTeams />}
+                />
+              }
+            />
+            <Route
+              path="/knockout"
+              element={
+                <ConditionalRoute
+                  isEnabled={settings.knockoutStageEnabled}
+                  element={<KnockoutStage />}
+                />
+              }
+            />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>

@@ -24,12 +24,6 @@ function Settings() {
     qualifiedTeamsEnabled: true,
   });
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/");
-    }
-  }, [isAuthenticated, navigate]);
-
   // Load settings from Firestore on mount (both authenticated and non-authenticated can view)
   useEffect(() => {
     const loadSettings = async () => {
@@ -76,14 +70,24 @@ function Settings() {
   }, [settings, currentUser, loading]);
 
   const toggleFeature = (featureName) => {
+    if (!isAuthenticated) {
+      alert("Please sign in as admin to modify settings");
+      return;
+    }
     setSettings({
       ...settings,
       [featureName]: !settings[featureName],
     });
   };
 
-  if (!isAuthenticated) {
-    return null;
+  if (loading) {
+    return (
+      <div className="settings">
+        <Container>
+          <p>Loading settings...</p>
+        </Container>
+      </div>
+    );
   }
 
   return (
@@ -98,6 +102,11 @@ function Settings() {
 
         <div className="settings-section">
           <h3>Tournament Flow</h3>
+          {!isAuthenticated && (
+            <div className="auth-notice" style={{ marginBottom: "1rem" }}>
+              <p>🔒 Sign in as admin to modify settings</p>
+            </div>
+          )}
           <p className="settings-description">
             Enable or disable tournament pages. Disabling a page will hide it
             from navigation but preserve any existing data. Pages are shown in
