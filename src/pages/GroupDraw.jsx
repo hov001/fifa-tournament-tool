@@ -57,11 +57,9 @@ function GroupDraw() {
           if (savedGroups) {
             setGroups(savedGroups);
           } else {
-            // Initialize shuffle display with participant clubs if no groups exist
-            const clubsList = participantsData
-              .filter((p) => p.club)
-              .map((p) => p.club);
-            setCurrentShuffle(clubsList);
+            // Initialize shuffle display with participants if no groups exist
+            const participantsList = participantsData.filter((p) => p.club);
+            setCurrentShuffle(participantsList);
           }
         } else {
           navigate("/");
@@ -146,11 +144,13 @@ function GroupDraw() {
     // Draw participants one by one with animation
     for (let i = 0; i < drawOrder.length; i++) {
       const { participant, groupId } = drawOrder[i];
-      const remainingClubs = drawOrder.slice(i).map((d) => d.participant.club);
+      const remainingParticipants = drawOrder
+        .slice(i)
+        .map((d) => d.participant);
 
-      // Shuffle remaining clubs for 8 cycles
+      // Shuffle remaining participants for 8 cycles
       for (let j = 0; j < 8; j++) {
-        setCurrentShuffle(shuffleArray(remainingClubs));
+        setCurrentShuffle(shuffleArray(remainingParticipants));
         await new Promise((resolve) => setTimeout(resolve, 80));
       }
 
@@ -261,10 +261,13 @@ function GroupDraw() {
           <div className="shuffling-clubs">
             <h3>Shuffling...</h3>
             <div className="clubs-shuffle-grid">
-              {currentShuffle.map((club, index) => (
-                <div key={`${club.id}-${index}`} className="shuffle-club-item">
-                  <ClubLogo club={club} size="small" />
-                  <span className="shuffle-club-name">{club.name}</span>
+              {currentShuffle.map((participant, index) => (
+                <div
+                  key={`${participant.id}-${index}`}
+                  className="shuffle-club-item"
+                >
+                  <Avatar participant={participant} size="medium" />
+                  <span className="shuffle-club-name">{participant.name}</span>
                 </div>
               ))}
             </div>
