@@ -1,0 +1,46 @@
+.auth-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.auth-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(79, 70, 229, 0.1);
+  border: 2px solid rgba(79, 70, 229, 0.2);
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.auth-user-icon {
+  font-size: 1.2rem;
+}
+
+.auth-user-email {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.logout-btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .auth-status {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .auth-user-badge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .logout-btn {
+    width: 100%;
+  }
+}

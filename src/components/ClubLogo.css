@@ -1,0 +1,50 @@
+.club-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.club-logo {
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.club-logo-small {
+  padding: 0.3rem;
+}
+
+.club-logo-medium {
+  padding: 0.4rem;
+}
+
+.club-logo-large {
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+.club-logo:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+}
+
+.club-name-text {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.no-club-text {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+.no-club-icon {
+  color: #d1d5db;
+  font-size: 1.5rem;
+  font-weight: 300;
+}

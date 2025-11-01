@@ -1,0 +1,261 @@
+.qualified-teams-page {
+  min-height: calc(100vh - 80px);
+  padding: 2rem 0;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-section h2 {
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.empty-state p {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+/* Stage Sections */
+.stage-section {
+  margin-bottom: 3rem;
+  padding: 2rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.stage-section:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Finals Section - Gold */
+.finals-section {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.08) 0%,
+    rgba(255, 215, 0, 0.03) 100%
+  );
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.finals-section:hover {
+  box-shadow: 0 8px 32px rgba(255, 215, 0, 0.4);
+}
+
+.finals-section .stage-header h3 {
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+/* Semifinals Section - Silver */
+.semifinals-section {
+  background: linear-gradient(
+    135deg,
+    rgba(192, 192, 192, 0.08) 0%,
+    rgba(192, 192, 192, 0.03) 100%
+  );
+  border-color: rgba(192, 192, 192, 0.3);
+}
+
+.semifinals-section:hover {
+  box-shadow: 0 8px 32px rgba(192, 192, 192, 0.4);
+}
+
+.semifinals-section .stage-header h3 {
+  color: #c0c0c0;
+}
+
+/* Quarterfinals Section - Bronze */
+.quarterfinals-section {
+  background: linear-gradient(
+    135deg,
+    rgba(205, 127, 50, 0.08) 0%,
+    rgba(205, 127, 50, 0.03) 100%
+  );
+  border-color: rgba(205, 127, 50, 0.3);
+}
+
+.quarterfinals-section:hover {
+  box-shadow: 0 8px 32px rgba(205, 127, 50, 0.4);
+}
+
+.quarterfinals-section .stage-header h3 {
+  color: #cd7f32;
+}
+
+/* Qualified Section - Default */
+.qualified-section {
+  background: linear-gradient(
+    135deg,
+    rgba(76, 175, 80, 0.08) 0%,
+    rgba(76, 175, 80, 0.03) 100%
+  );
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+.qualified-section:hover {
+  box-shadow: 0 8px 32px rgba(76, 175, 80, 0.4);
+}
+
+.qualified-section .stage-header h3 {
+  color: #4caf50;
+}
+
+/* Stage Header */
+.stage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.stage-header h3 {
+  font-size: 1.8rem;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 700;
+}
+
+.team-count {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* Teams Grid */
+.teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Team Card */
+.qualified-team-card {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.qualified-team-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.seed-number {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  z-index: 10;
+}
+
+.team-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.group-badge {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stage-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .teams-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+
+  .stage-section {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-section h2 {
+    font-size: 1.5rem;
+  }
+
+  .stage-header h3 {
+    font-size: 1.4rem;
+  }
+
+  .teams-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qualified-team-card {
+    padding: 1rem;
+  }
+}
