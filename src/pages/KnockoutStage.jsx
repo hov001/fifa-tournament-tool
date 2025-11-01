@@ -11,6 +11,7 @@ import {
   setKnockoutMatches as saveKnockoutMatches,
   getGroupStandings,
 } from "../firebase/dbService";
+import { getTournamentId } from "../utils/tournamentContext";
 import "./KnockoutStage.css";
 
 function KnockoutStage() {
@@ -82,44 +83,19 @@ function KnockoutStage() {
   };
 
   useEffect(() => {
-    // Load knockout matches and group standings from Firestore (authenticated) or localStorage (non-authenticated)
+    // Load knockout matches and group standings from Firestore
     const loadData = async () => {
-      // If not authenticated, load from localStorage (read-only mode)
-      if (!currentUser) {
-        try {
-          const localKnockout = localStorage.getItem("knockoutMatches");
-          if (localKnockout) {
-            const saved = JSON.parse(localKnockout);
-            setKnockoutMatches({
-              ...saved,
-              thirdPlace: saved.thirdPlace || {
-                id: "thirdPlace",
-                homeTeam: null,
-                awayTeam: null,
-                homeGoals: null,
-                awayGoals: null,
-                winner: null,
-              },
-              runnerUp: saved.runnerUp || null,
-              thirdPlaceWinner: saved.thirdPlaceWinner || null,
-            });
-          }
+      const tournamentId = getTournamentId(currentUser);
 
-          const localStandings = localStorage.getItem("groupStandings");
-          if (localStandings) {
-            setGroupStandings(JSON.parse(localStandings));
-          }
-        } catch (error) {
-          console.error("Error loading from localStorage:", error);
-        }
+      if (!tournamentId) {
         setLoading(false);
         return;
       }
 
-      // Authenticated user: load from Firestore
+      // Load from Firestore
       try {
         // Load knockout matches if they exist
-        const saved = await getKnockoutMatches(currentUser.uid);
+        const saved = await getKnockoutMatches(tournamentId);
         if (saved) {
           // Migrate old data to include new fields
           setKnockoutMatches({
@@ -138,7 +114,7 @@ function KnockoutStage() {
         }
 
         // Load group standings and determine qualified teams
-        const standings = await getGroupStandings(currentUser.uid);
+        const standings = await getGroupStandings(tournamentId);
         if (!standings) {
           setLoading(false);
           return;
@@ -226,7 +202,10 @@ function KnockoutStage() {
       if (!currentUser || loading) return;
 
       try {
-        await saveKnockoutMatches(currentUser.uid, knockoutMatches);
+        const tournamentId = getTournamentId(currentUser);
+        if (tournamentId) {
+          await saveKnockoutMatches(tournamentId, knockoutMatches);
+        }
       } catch (error) {
         console.error("Error saving knockout matches:", error);
       }

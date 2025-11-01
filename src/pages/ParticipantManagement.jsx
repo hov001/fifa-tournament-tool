@@ -51,92 +51,13 @@ function ParticipantManagement() {
       const tournamentId = getTournamentId(currentUser);
 
       if (!tournamentId) {
-        // No tournament set - maybe first-time visitor
-        // Fall back to localStorage for backward compatibility
-        try {
-          const localData = localStorage.getItem("participantNames");
-          if (localData) {
-            const parsedLocal = JSON.parse(localData);
-            if (parsedLocal && parsedLocal.length > 0) {
-              const normalizedParticipants = parsedLocal.map((p) => {
-                if (typeof p === "string") {
-                  const userId = generateUserId();
-                  return {
-                    userId: userId,
-                    id: userId,
-                    name: p,
-                    avatar: avatarOptions[0],
-                    customImage: null,
-                  };
-                } else if (!p.userId) {
-                  const newUserId = generateUserId();
-                  return {
-                    ...p,
-                    userId: newUserId,
-                    id: p.id || newUserId,
-                  };
-                }
-                return p;
-              });
-              setParticipantsState(normalizedParticipants);
-            }
-          }
-        } catch (error) {
-          console.error("Error loading from localStorage:", error);
-        }
         setLoading(false);
         return;
       }
 
       // Load from Firestore using the tournament ID
       try {
-        let savedParticipants = await getParticipantNames(tournamentId);
-
-        // If no data in Firestore and user is authenticated, check localStorage and migrate
-        if (
-          (!savedParticipants || savedParticipants.length === 0) &&
-          currentUser
-        ) {
-          console.log("No data in Firestore, checking localStorage...");
-
-          // Check participantNames first
-          const localStorageData = localStorage.getItem("participantNames");
-          if (localStorageData) {
-            console.log("Found participantNames in localStorage, migrating...");
-            const parsedLocal = JSON.parse(localStorageData);
-            if (parsedLocal && parsedLocal.length > 0) {
-              await setParticipantNames(tournamentId, parsedLocal);
-              savedParticipants = parsedLocal;
-              console.log("✓ Migrated participantNames to Firestore");
-            }
-          }
-
-          // Also check if there's ordered participants data
-          if (!savedParticipants || savedParticipants.length === 0) {
-            const orderedData = localStorage.getItem("participants");
-            if (orderedData) {
-              console.log(
-                "Found ordered participants in localStorage, migrating..."
-              );
-              const parsedOrdered = JSON.parse(orderedData);
-              if (parsedOrdered && parsedOrdered.length > 0) {
-                // Extract participant info and save to participantNames
-                const participantNames = parsedOrdered.map((p) => ({
-                  userId: p.userId || p.id,
-                  id: p.id || p.userId,
-                  name: p.name,
-                  avatar: p.avatar,
-                  customImage: p.customImage,
-                }));
-                await setParticipantNames(tournamentId, participantNames);
-                savedParticipants = participantNames;
-                console.log(
-                  "✓ Migrated participants to Firestore from ordered list"
-                );
-              }
-            }
-          }
-        }
+        const savedParticipants = await getParticipantNames(tournamentId);
 
         if (savedParticipants && savedParticipants.length > 0) {
           // Add userId to existing participants that don't have one (backward compatibility)
@@ -380,50 +301,6 @@ function ParticipantManagement() {
     navigate("/ordering");
   };
 
-  const manualMigrate = async () => {
-    if (!currentUser) return;
-
-    try {
-      console.log("Starting manual migration...");
-      const localData = localStorage.getItem("participantNames");
-      const orderedData = localStorage.getItem("participants");
-
-      if (!localData && !orderedData) {
-        alert("No localStorage data found to migrate.");
-        return;
-      }
-
-      let dataToMigrate = null;
-
-      if (localData) {
-        dataToMigrate = JSON.parse(localData);
-      } else if (orderedData) {
-        const parsedOrdered = JSON.parse(orderedData);
-        dataToMigrate = parsedOrdered.map((p) => ({
-          userId: p.userId || p.id,
-          id: p.id || p.userId,
-          name: p.name,
-          avatar: p.avatar,
-          customImage: p.customImage,
-        }));
-      }
-
-      if (dataToMigrate && dataToMigrate.length > 0) {
-        const tournamentId = getTournamentId(currentUser);
-        if (!tournamentId) return;
-        await setParticipantNames(tournamentId, dataToMigrate);
-        setParticipants(dataToMigrate);
-        console.log("✓ Manual migration completed");
-        alert(
-          `Successfully migrated ${dataToMigrate.length} participants to Firestore!`
-        );
-      }
-    } catch (error) {
-      console.error("Error during manual migration:", error);
-      alert("Error migrating data: " + error.message);
-    }
-  };
-
   const clearAll = async () => {
     if (!isAuthenticated) {
       alert("Please sign in as admin to clear all data");
@@ -461,11 +338,6 @@ function ParticipantManagement() {
         <div className="header-section">
           <h2>Add Participants</h2>
           <div className="header-actions">
-            {isAuthenticated && participants.length === 0 && (
-              <Button onClick={manualMigrate} variant="primary">
-                Migrate from localStorage
-              </Button>
-            )}
             {isAuthenticated && (
               <Button
                 onClick={clearAll}

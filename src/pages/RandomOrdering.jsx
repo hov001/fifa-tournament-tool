@@ -18,6 +18,7 @@ import {
   deleteMatchHistory,
   deleteKnockoutMatches,
 } from "../firebase/dbService";
+import { getTournamentId } from "../utils/tournamentContext";
 import "./RandomOrdering.css";
 
 function RandomOrdering() {
@@ -31,60 +32,22 @@ function RandomOrdering() {
 
   useEffect(() => {
     const loadParticipants = async () => {
-      // If not authenticated, load from localStorage (read-only mode)
-      if (!currentUser) {
-        try {
-          const localParticipants = localStorage.getItem("participants");
-          if (localParticipants) {
-            const parsed = JSON.parse(localParticipants);
-            if (parsed && parsed.length > 0) {
-              setParticipantsState(parsed);
-              setLoading(false);
-              return;
-            }
-          }
+      const tournamentId = getTournamentId(currentUser);
 
-          // Fallback to participantNames
-          const localNames = localStorage.getItem("participantNames");
-          if (localNames) {
-            const parsed = JSON.parse(localNames);
-            if (parsed && parsed.length > 0) {
-              const processedParticipants = parsed.map((p, idx) => {
-                if (typeof p === "string") {
-                  const userId = uuidv4();
-                  return {
-                    userId: userId,
-                    id: userId,
-                    name: p,
-                    avatar: avatarOptions[idx % avatarOptions.length],
-                    customImage: null,
-                    order: null,
-                    club: null,
-                  };
-                }
-                return { ...p, order: p.order || null, club: p.club || null };
-              });
-              setParticipantsState(processedParticipants);
-              setLoading(false);
-              return;
-            }
-          }
-        } catch (error) {
-          console.error("Error loading from localStorage:", error);
-        }
+      if (!tournamentId) {
         setLoading(false);
         navigate("/");
         return;
       }
 
-      // Authenticated user: load from Firestore
+      // Load from Firestore
       try {
         // First try to load from participants (if already ordered)
-        let participantsData = await getParticipants(currentUser.uid);
+        let participantsData = await getParticipants(tournamentId);
 
         if (!participantsData) {
           // If no participants, load from participantNames
-          const participantNames = await getParticipantNames(currentUser.uid);
+          const participantNames = await getParticipantNames(tournamentId);
           if (!participantNames) {
             navigate("/");
             return;
@@ -205,7 +168,10 @@ function RandomOrdering() {
           setCurrentShuffle(finalOrdered);
           setIsOrdered(true);
           setIsShuffling(false);
-          await saveParticipants(currentUser.uid, finalOrdered);
+          const tournamentId = getTournamentId(currentUser);
+          if (tournamentId) {
+            await saveParticipants(tournamentId, finalOrdered);
+          }
         } catch (error) {
           console.error("Error saving ordered participants:", error);
           alert("Error saving order. Please try again.");
@@ -248,15 +214,18 @@ function RandomOrdering() {
         setIsOrdered(false);
 
         // Update participantNames and remove participants
-        await setParticipantNames(currentUser.uid, resetParticipantsData);
-        await deleteParticipants(currentUser.uid);
+        const tournamentId = getTournamentId(currentUser);
+        if (tournamentId) {
+          await setParticipantNames(tournamentId, resetParticipantsData);
+          await deleteParticipants(tournamentId);
 
-        // Clear all downstream data
-        await deleteAvailableClubs(currentUser.uid);
-        await deleteGroups(currentUser.uid);
-        await deleteGroupStandings(currentUser.uid);
-        await deleteMatchHistory(currentUser.uid);
-        await deleteKnockoutMatches(currentUser.uid);
+          // Clear all downstream data
+          await deleteAvailableClubs(tournamentId);
+          await deleteGroups(tournamentId);
+          await deleteGroupStandings(tournamentId);
+          await deleteMatchHistory(tournamentId);
+          await deleteKnockoutMatches(tournamentId);
+        }
       } catch (error) {
         console.error("Error resetting ordering:", error);
         alert("Error resetting order. Please try again.");

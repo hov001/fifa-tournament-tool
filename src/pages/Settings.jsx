@@ -7,11 +7,6 @@ import {
   getTournamentSettings,
   setTournamentSettings,
 } from "../firebase/dbService";
-import {
-  isMigrationCompleted,
-  clearLocalStorageData,
-  migrateLocalStorageToFirestore,
-} from "../firebase/localStorageMigration";
 import { getTournamentId } from "../utils/tournamentContext";
 import "./Settings.css";
 
@@ -19,7 +14,6 @@ function Settings() {
   const { isAuthenticated, currentUser } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [migrationCompleted, setMigrationCompleted] = useState(false);
   const [settings, setSettings] = useState({
     participantManagementEnabled: true,
     randomOrderingEnabled: true,
@@ -29,11 +23,6 @@ function Settings() {
     knockoutStageEnabled: true,
     qualifiedTeamsEnabled: true,
   });
-
-  // Check migration status
-  useEffect(() => {
-    setMigrationCompleted(isMigrationCompleted());
-  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -91,42 +80,6 @@ function Settings() {
       ...settings,
       [featureName]: !settings[featureName],
     });
-  };
-
-  const handleManualMigration = async () => {
-    if (!currentUser) return;
-
-    if (
-      window.confirm(
-        "This will migrate any existing localStorage data to Firestore. Continue?"
-      )
-    ) {
-      try {
-        const result = await migrateLocalStorageToFirestore(currentUser.uid);
-        if (result.success) {
-          setMigrationCompleted(true);
-          alert(result.message || "Migration completed successfully!");
-        } else {
-          alert("Migration failed: " + result.error);
-        }
-      } catch (error) {
-        console.error("Manual migration error:", error);
-        alert("Migration failed: " + error.message);
-      }
-    }
-  };
-
-  const handleClearLocalStorage = () => {
-    if (
-      window.confirm(
-        "This will clear all tournament data from localStorage (browser storage). Your data is safely stored in Firestore. Continue?"
-      )
-    ) {
-      clearLocalStorageData(true);
-      alert(
-        "localStorage cleared! All data is now stored in Firestore and will load when you refresh."
-      );
-    }
   };
 
   if (!isAuthenticated) {
@@ -258,47 +211,6 @@ function Settings() {
                 <span className="toggle-slider"></span>
               </label>
             </div>
-          </div>
-        </div>
-
-        <div className="settings-section">
-          <h3>Data Migration</h3>
-          <p className="settings-description">
-            Manage data migration from browser localStorage to cloud Firestore.
-          </p>
-
-          <div className="settings-list">
-            <div className="setting-item">
-              <div className="setting-info">
-                <h4>Migration Status</h4>
-                <p>
-                  {migrationCompleted
-                    ? "✓ Data has been migrated to Firestore"
-                    : "⚠️ Migration not completed"}
-                </p>
-              </div>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                {!migrationCompleted && (
-                  <Button onClick={handleManualMigration} variant="primary">
-                    Migrate Now
-                  </Button>
-                )}
-                {migrationCompleted && (
-                  <Button onClick={handleClearLocalStorage} variant="secondary">
-                    Clear localStorage
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="settings-note" style={{ marginTop: "1rem" }}>
-            <p>
-              <strong>About Migration:</strong> Your tournament data is now
-              stored in Firestore (cloud database). The migration process
-              automatically runs when you sign in. You can safely clear
-              localStorage data after migration is complete.
-            </p>
           </div>
         </div>
 

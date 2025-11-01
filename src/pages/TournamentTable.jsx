@@ -76,27 +76,6 @@ function TournamentTable() {
       const tournamentId = getTournamentId(currentUser);
 
       if (!tournamentId) {
-        // No tournament set - fall back to localStorage
-        try {
-          const localGroups = localStorage.getItem("groups");
-          if (localGroups) {
-            const parsedGroups = JSON.parse(localGroups);
-            const localStandings = localStorage.getItem("groupStandings");
-
-            if (localStandings) {
-              setGroupStandings(JSON.parse(localStandings));
-            } else {
-              setGroupStandings(initializeStandings(parsedGroups));
-            }
-
-            const localHistory = localStorage.getItem("matchHistory");
-            if (localHistory) {
-              setMatchHistory(JSON.parse(localHistory));
-            }
-          }
-        } catch (error) {
-          console.error("Error loading from localStorage:", error);
-        }
         setLoading(false);
         return;
       }

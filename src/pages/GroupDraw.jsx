@@ -32,36 +32,6 @@ function GroupDraw() {
       const tournamentId = getTournamentId(currentUser);
 
       if (!tournamentId) {
-        // No tournament set - fall back to localStorage
-        try {
-          const localParticipants = localStorage.getItem("participants");
-          if (localParticipants) {
-            const parsed = JSON.parse(localParticipants);
-            if (parsed && parsed.length > 0) {
-              const hasClubs = parsed.some(
-                (p) => p.club !== null && p.club !== undefined
-              );
-              if (hasClubs) {
-                setParticipants(parsed);
-
-                const localGroups = localStorage.getItem("groups");
-                if (localGroups) {
-                  setGroups(JSON.parse(localGroups));
-                } else {
-                  const clubsList = parsed
-                    .filter((p) => p.club)
-                    .map((p) => p.club);
-                  setCurrentShuffle(clubsList);
-                }
-
-                setLoading(false);
-                return;
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Error loading from localStorage:", error);
-        }
         setLoading(false);
         navigate("/");
         return;

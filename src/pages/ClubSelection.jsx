@@ -19,6 +19,7 @@ import {
   deleteMatchHistory,
   deleteKnockoutMatches,
 } from "../firebase/dbService";
+import { getTournamentId } from "../utils/tournamentContext";
 import "./ClubSelection.css";
 
 function ClubSelection() {
@@ -30,45 +31,20 @@ function ClubSelection() {
   const [currentClubIndex, setCurrentClubIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Load data from Firestore (authenticated) or localStorage (non-authenticated)
+  // Load data from Firestore
   useEffect(() => {
     const loadData = async () => {
-      // If not authenticated, load from localStorage (read-only mode)
-      if (!currentUser) {
-        try {
-          const localParticipants = localStorage.getItem("participants");
-          if (localParticipants) {
-            const parsed = JSON.parse(localParticipants);
-            if (parsed && parsed.length > 0) {
-              const hasOrder = parsed.some(
-                (p) => p.order !== null && p.order !== undefined
-              );
-              if (hasOrder) {
-                setParticipants(parsed);
+      const tournamentId = getTournamentId(currentUser);
 
-                const localClubs = localStorage.getItem("availableClubs");
-                if (localClubs) {
-                  setAvailableClubs(JSON.parse(localClubs));
-                } else {
-                  setAvailableClubs(clubs);
-                }
-
-                setLoading(false);
-                return;
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Error loading from localStorage:", error);
-        }
+      if (!tournamentId) {
         setLoading(false);
         navigate("/ordering");
         return;
       }
 
-      // Authenticated user: load from Firestore
+      // Load from Firestore
       try {
-        const savedParticipants = await getParticipants(currentUser.uid);
+        const savedParticipants = await getParticipants(tournamentId);
         if (savedParticipants) {
           // Ensure participants have order set (ordered)
           const hasOrder = savedParticipants.some(
@@ -84,13 +60,13 @@ function ClubSelection() {
           return;
         }
 
-        const savedClubs = await getAvailableClubs(currentUser.uid);
+        const savedClubs = await getAvailableClubs(tournamentId);
         if (savedClubs) {
           setAvailableClubs(savedClubs);
         } else {
           // Initialize with all clubs if not set
           setAvailableClubs(clubs);
-          await saveAvailableClubs(currentUser.uid, clubs);
+          await saveAvailableClubs(tournamentId, clubs);
         }
       } catch (error) {
         console.error("Error loading club selection data:", error);
@@ -108,10 +84,13 @@ function ClubSelection() {
       if (!currentUser || loading) return;
 
       try {
-        if (participants.length > 0) {
-          await saveParticipants(currentUser.uid, participants);
+        const tournamentId = getTournamentId(currentUser);
+        if (tournamentId) {
+          if (participants.length > 0) {
+            await saveParticipants(tournamentId, participants);
+          }
+          await saveAvailableClubs(tournamentId, availableClubs);
         }
-        await saveAvailableClubs(currentUser.uid, availableClubs);
       } catch (error) {
         console.error("Error saving club selection data:", error);
       }
@@ -185,16 +164,19 @@ function ClubSelection() {
           club: null,
         }));
         setParticipants(resetParticipantsData);
-        await saveParticipants(currentUser.uid, resetParticipantsData);
-        setAvailableClubs(clubs);
-        await saveAvailableClubs(currentUser.uid, clubs);
-        setSpinning(null);
+        const tournamentId = getTournamentId(currentUser);
+        if (tournamentId) {
+          await saveParticipants(tournamentId, resetParticipantsData);
+          setAvailableClubs(clubs);
+          await saveAvailableClubs(tournamentId, clubs);
+          setSpinning(null);
 
-        // Clear all downstream data
-        await deleteGroups(currentUser.uid);
-        await deleteGroupStandings(currentUser.uid);
-        await deleteMatchHistory(currentUser.uid);
-        await deleteKnockoutMatches(currentUser.uid);
+          // Clear all downstream data
+          await deleteGroups(tournamentId);
+          await deleteGroupStandings(tournamentId);
+          await deleteMatchHistory(tournamentId);
+          await deleteKnockoutMatches(tournamentId);
+        }
       } catch (error) {
         console.error("Error resetting club selections:", error);
         alert("Error resetting. Please try again.");

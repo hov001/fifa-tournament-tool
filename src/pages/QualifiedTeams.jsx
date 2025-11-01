@@ -6,6 +6,7 @@ import Container from "../components/Container";
 import Avatar from "../components/Avatar";
 import ClubLogo from "../components/ClubLogo";
 import { getKnockoutMatches, getGroupStandings } from "../firebase/dbService";
+import { getTournamentId } from "../utils/tournamentContext";
 import "./QualifiedTeams.css";
 
 function QualifiedTeams() {
@@ -20,32 +21,22 @@ function QualifiedTeams() {
 
   useEffect(() => {
     const loadData = async () => {
+      const tournamentId = getTournamentId(currentUser);
+
+      if (!tournamentId) {
+        return;
+      }
+
       let knockoutMatches = {};
       let standings = [];
 
-      // Load from Firestore (authenticated) or localStorage (non-authenticated)
-      if (!currentUser) {
-        try {
-          const localKnockout = localStorage.getItem("knockoutMatches");
-          if (localKnockout) {
-            knockoutMatches = JSON.parse(localKnockout);
-          }
-          const localStandings = localStorage.getItem("groupStandings");
-          if (localStandings) {
-            standings = JSON.parse(localStandings);
-          }
-        } catch (error) {
-          console.error("Error loading from localStorage:", error);
-          return;
-        }
-      } else {
-        try {
-          knockoutMatches = (await getKnockoutMatches(currentUser.uid)) || {};
-          standings = (await getGroupStandings(currentUser.uid)) || [];
-        } catch (error) {
-          console.error("Error loading from Firestore:", error);
-          return;
-        }
+      // Load from Firestore
+      try {
+        knockoutMatches = (await getKnockoutMatches(tournamentId)) || {};
+        standings = (await getGroupStandings(tournamentId)) || [];
+      } catch (error) {
+        console.error("Error loading from Firestore:", error);
+        return;
       }
 
       try {

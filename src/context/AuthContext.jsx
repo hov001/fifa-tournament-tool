@@ -5,7 +5,6 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { auth } from "../firebase/config";
-import { migrateLocalStorageToFirestore } from "../firebase/localStorageMigration";
 import { setTournamentId } from "../utils/tournamentContext";
 
 const AuthContext = createContext();
@@ -26,22 +25,11 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
 
-      // Run migration when user signs in
+      // Set tournament ID when user signs in
       if (user) {
         // Set this user's ID as the tournament to view
         // This allows non-authenticated users to view this tournament later
         setTournamentId(user.uid);
-
-        try {
-          const migrationResult = await migrateLocalStorageToFirestore(
-            user.uid
-          );
-          if (migrationResult.success && !migrationResult.skipped) {
-            console.log("✓ Data migration completed:", migrationResult.message);
-          }
-        } catch (error) {
-          console.error("Migration error:", error);
-        }
       }
 
       setLoading(false);
