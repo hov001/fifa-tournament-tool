@@ -119,7 +119,7 @@ function ClubSelection() {
     setCurrentClubIndex(0);
 
     let counter = 0;
-    const maxSpins = 5;
+    const maxSpins = 30;
     const interval = setInterval(() => {
       setCurrentClubIndex((prev) => (prev + 1) % availableClubs.length);
       counter++;
