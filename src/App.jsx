@@ -44,7 +44,13 @@ function ConditionalRoute({
   redirectTo = "/",
   settings = null,
   isIndexRoute = false,
+  isAuthenticated = false,
 }) {
+  // Admins (authenticated users) can access all pages regardless of settings
+  if (isAuthenticated) {
+    return element;
+  }
+
   if (!isEnabled) {
     // If this is the index route and it's disabled, redirect to the next enabled page
     if (isIndexRoute && settings) {
@@ -109,6 +115,7 @@ function ConditionalRoute({
 function Navigation() {
   const { isAuthenticated, currentUser, loading } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [settingsLoading, setSettingsLoading] = useState(true);
   const [settings, setSettings] = useState({
     participantManagementEnabled: true,
     randomOrderingEnabled: true,
@@ -122,8 +129,12 @@ function Navigation() {
   // Load settings from Firestore on mount and when user changes
   useEffect(() => {
     const loadSettings = async () => {
+      setSettingsLoading(true);
       const tournamentId = getTournamentId(currentUser);
-      if (!tournamentId) return;
+      if (!tournamentId) {
+        setSettingsLoading(false);
+        return;
+      }
 
       try {
         const savedSettings = await getTournamentSettings(tournamentId);
@@ -132,6 +143,8 @@ function Navigation() {
         }
       } catch (error) {
         console.error("Error loading tournament settings:", error);
+      } finally {
+        setSettingsLoading(false);
       }
     };
 
@@ -163,8 +176,8 @@ function Navigation() {
     };
   }, [currentUser]);
 
-  // Show loading screen while auth is initializing (after all hooks)
-  if (loading) {
+  // Show loading screen while auth or settings are initializing (after all hooks)
+  if (loading || settingsLoading) {
     return (
       <div className="app">
         <div
@@ -274,6 +287,7 @@ function Navigation() {
                   element={<ParticipantManagement />}
                   settings={settings}
                   isIndexRoute={true}
+                  isAuthenticated={isAuthenticated}
                 />
               }
             />
@@ -283,6 +297,7 @@ function Navigation() {
                 <ConditionalRoute
                   isEnabled={settings.randomOrderingEnabled}
                   element={<RandomOrdering />}
+                  isAuthenticated={isAuthenticated}
                 />
               }
             />
@@ -292,6 +307,7 @@ function Navigation() {
                 <ConditionalRoute
                   isEnabled={settings.clubSelectionEnabled}
                   element={<ClubSelection />}
+                  isAuthenticated={isAuthenticated}
                 />
               }
             />
@@ -301,6 +317,7 @@ function Navigation() {
                 <ConditionalRoute
                   isEnabled={settings.groupDrawEnabled}
                   element={<GroupDraw />}
+                  isAuthenticated={isAuthenticated}
                 />
               }
             />
@@ -310,6 +327,7 @@ function Navigation() {
                 <ConditionalRoute
                   isEnabled={settings.tournamentTableEnabled}
                   element={<TournamentTable />}
+                  isAuthenticated={isAuthenticated}
                 />
               }
             />
@@ -319,6 +337,7 @@ function Navigation() {
                 <ConditionalRoute
                   isEnabled={settings.qualifiedTeamsEnabled}
                   element={<QualifiedTeams />}
+                  isAuthenticated={isAuthenticated}
                 />
               }
             />
@@ -328,6 +347,7 @@ function Navigation() {
                 <ConditionalRoute
                   isEnabled={settings.knockoutStageEnabled}
                   element={<KnockoutStage />}
+                  isAuthenticated={isAuthenticated}
                 />
               }
             />
