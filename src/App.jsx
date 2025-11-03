@@ -21,9 +21,61 @@ import { getTournamentSettings } from "./firebase/dbService";
 import { getTournamentId } from "./utils/tournamentContext";
 import "./App.css";
 
+// Helper function to get the next enabled page path
+function getNextEnabledPage(settings) {
+  const pages = [
+    { path: "/", enabled: settings.participantManagementEnabled },
+    { path: "/ordering", enabled: settings.randomOrderingEnabled },
+    { path: "/clubs", enabled: settings.clubSelectionEnabled },
+    { path: "/groups", enabled: settings.groupDrawEnabled },
+    { path: "/tournament", enabled: settings.tournamentTableEnabled },
+    { path: "/knockout", enabled: settings.knockoutStageEnabled },
+    { path: "/qualified", enabled: settings.qualifiedTeamsEnabled },
+  ];
+
+  const enabledPage = pages.find((page) => page.enabled);
+  return enabledPage ? enabledPage.path : null;
+}
+
 // Conditional Route wrapper that redirects if feature is disabled
-function ConditionalRoute({ isEnabled, element, redirectTo = "/" }) {
+function ConditionalRoute({
+  isEnabled,
+  element,
+  redirectTo = "/",
+  settings = null,
+  isIndexRoute = false,
+}) {
   if (!isEnabled) {
+    // If this is the index route and it's disabled, redirect to the next enabled page
+    if (isIndexRoute && settings) {
+      const nextPage = getNextEnabledPage(settings);
+      if (nextPage && nextPage !== "/") {
+        return <Navigate to={nextPage} replace />;
+      }
+      // If no pages are enabled, show a message
+      return (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "50vh",
+            color: "#fff",
+            fontSize: "1.2rem",
+            textAlign: "center",
+            padding: "2rem",
+          }}
+        >
+          <div>
+            <p>No tournament pages are currently enabled.</p>
+            <p style={{ fontSize: "1rem", marginTop: "1rem", opacity: 0.7 }}>
+              Please contact the tournament administrator.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     // Show a message instead of infinite redirects if we're already at the redirect target
     if (window.location.pathname === redirectTo) {
       return (
@@ -220,6 +272,8 @@ function Navigation() {
                 <ConditionalRoute
                   isEnabled={settings.participantManagementEnabled}
                   element={<ParticipantManagement />}
+                  settings={settings}
+                  isIndexRoute={true}
                 />
               }
             />
