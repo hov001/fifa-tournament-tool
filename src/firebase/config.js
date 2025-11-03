@@ -22,4 +22,9 @@ export const auth = getAuth(app);
 // Initialize Firestore
 export const db = getFirestore(app);
 
+// Default tournament ID for public viewing (when no user is logged in)
+// This should be set to the admin's user ID whose tournament you want to display publicly
+// You can find the user ID after the admin logs in (check localStorage or Firebase console)
+export const DEFAULT_TOURNAMENT_ID = "uImoYVjHSJSttdD0fPomiygjb6r2"; // Replace with your admin's user ID
+
 export default app;

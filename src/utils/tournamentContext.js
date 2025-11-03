@@ -3,12 +3,14 @@
  * Manages which tournament (userId) to view for both authenticated and non-authenticated users
  */
 
+import { DEFAULT_TOURNAMENT_ID } from "../firebase/config";
+
 const TOURNAMENT_ID_KEY = "viewingTournamentId";
 
 /**
  * Get the tournament ID to view
  * - For authenticated users: returns their own userId
- * - For non-authenticated users: returns the stored tournament ID from localStorage
+ * - For non-authenticated users: returns the stored tournament ID from localStorage, or the default tournament ID
  * @param {Object} currentUser - The authenticated user object (or null)
  * @returns {string|null} - The userId/tournament ID to load data from
  */
@@ -18,9 +20,9 @@ export function getTournamentId(currentUser) {
     return currentUser.uid;
   }
 
-  // Non-authenticated user: check for stored tournament ID
+  // Non-authenticated user: check for stored tournament ID first, then fall back to default
   const storedId = localStorage.getItem(TOURNAMENT_ID_KEY);
-  return storedId;
+  return storedId || DEFAULT_TOURNAMENT_ID;
 }
 
 /**
