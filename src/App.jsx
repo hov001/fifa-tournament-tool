@@ -222,7 +222,6 @@ function Navigation() {
               />
             </div>
             <div className="header-right">
-              <AuthButton />
               <button
                 className={`hamburger ${menuOpen ? "active" : ""}`}
                 onClick={toggleMenu}
@@ -275,6 +274,9 @@ function Navigation() {
                 ⚙️ Settings
               </Link>
             )}
+            <div className="nav-auth-button">
+              <AuthButton />
+            </div>
           </nav>
         </header>
         <main className="main">
