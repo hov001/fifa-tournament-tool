@@ -606,7 +606,7 @@ function TournamentTable() {
                         <div className="grid-cell participant-cell">
                           <ClubLogo
                             club={{ name: team.club, logo: team.clubLogo }}
-                            size="small"
+                            size="large"
                           />
                           <Avatar
                             participant={{
@@ -614,7 +614,7 @@ function TournamentTable() {
                               avatar: team.avatar,
                               customImage: team.customImage,
                             }}
-                            size="small"
+                            size="large"
                           />
                         </div>
                         <div className="grid-cell">{team.played}</div>
@@ -695,7 +695,7 @@ function TournamentTable() {
                                         name: match.homeTeam.club,
                                         logo: match.homeTeam.clubLogo,
                                       }}
-                                      size="small"
+                                      size="large"
                                     />
                                     <Avatar
                                       participant={{
@@ -703,7 +703,7 @@ function TournamentTable() {
                                         avatar: match.homeTeam.avatar,
                                         customImage: match.homeTeam.customImage,
                                       }}
-                                      size="small"
+                                      size="large"
                                     />
                                     {/* <span className="team-name">
                                       {match.homeTeam.name}
@@ -728,7 +728,7 @@ function TournamentTable() {
                                         name: match.awayTeam.club,
                                         logo: match.awayTeam.clubLogo,
                                       }}
-                                      size="small"
+                                      size="large"
                                     />
                                     <Avatar
                                       participant={{
@@ -736,7 +736,7 @@ function TournamentTable() {
                                         avatar: match.awayTeam.avatar,
                                         customImage: match.awayTeam.customImage,
                                       }}
-                                      size="small"
+                                      size="large"
                                     />
                                     {/* <span className="team-name">
                                       {match.awayTeam.name}
