@@ -82,6 +82,86 @@ function KnockoutStage() {
     });
   };
 
+  // Helper function to sort 3rd place teams (only by points and goal difference)
+  const sortThirdPlaceTeams = (teams) => {
+    return [...teams].sort((a, b) => {
+      // 1. Higher points
+      if (b.points !== a.points) return b.points - a.points;
+      // 2. Higher goal difference
+      if (b.goalDifference !== a.goalDifference)
+        return b.goalDifference - a.goalDifference;
+      // If still tied, keep original order
+      return 0;
+    });
+  };
+
+  // Helper function to create knockout bracket with pot system
+  // Pot 1: 1st from each group + best 2nd place (by points, then goal diff)
+  // Pot 2: Remaining qualified teams
+  // Rule: Teams from same group cannot face each other in quarterfinals
+  const createBracketMatchups = (qualifiedTeams) => {
+    // Separate teams by position
+    const firstPlaceTeams = qualifiedTeams.filter((t) => t.position === 1);
+    const secondPlaceTeams = qualifiedTeams.filter((t) => t.position === 2);
+    const thirdPlaceTeams = qualifiedTeams.filter((t) => t.position === 3);
+
+    // Sort 2nd place teams to find the best one
+    const sortedSecondPlace = sortTeamsByRanking(secondPlaceTeams);
+
+    // Pot 1: All 1st place + best 2nd place
+    const pot1 = [...firstPlaceTeams, sortedSecondPlace[0]];
+
+    // Pot 2: Remaining 2nd place + 3rd place teams
+    const pot2 = [...sortedSecondPlace.slice(1), ...thirdPlaceTeams];
+
+    console.log(
+      "Pot 1:",
+      pot1.map(
+        (t) => `${t.participantName} (${t.groupName}, Pos ${t.position})`
+      )
+    );
+    console.log(
+      "Pot 2:",
+      pot2.map(
+        (t) => `${t.participantName} (${t.groupName}, Pos ${t.position})`
+      )
+    );
+
+    // Create matchups avoiding same group
+    const matchups = [];
+    const usedPot2 = new Set();
+
+    for (const pot1Team of pot1) {
+      // Find a Pot 2 team from a different group
+      const pot2Team = pot2.find(
+        (t) =>
+          !usedPot2.has(t.participantId) && t.groupName !== pot1Team.groupName
+      );
+
+      if (!pot2Team) {
+        // Fallback: if no different group available, take any available team
+        const fallbackTeam = pot2.find((t) => !usedPot2.has(t.participantId));
+        if (fallbackTeam) {
+          matchups.push({ home: pot1Team, away: fallbackTeam });
+          usedPot2.add(fallbackTeam.participantId);
+        }
+      } else {
+        matchups.push({ home: pot1Team, away: pot2Team });
+        usedPot2.add(pot2Team.participantId);
+      }
+    }
+
+    console.log(
+      "Quarterfinal Matchups:",
+      matchups.map(
+        (m) =>
+          `${m.home.participantName} (${m.home.groupName}) vs ${m.away.participantName} (${m.away.groupName})`
+      )
+    );
+
+    return matchups;
+  };
+
   useEffect(() => {
     // Load knockout matches and group standings from Firestore
     const loadData = async () => {
@@ -94,6 +174,57 @@ function KnockoutStage() {
 
       // Load from Firestore
       try {
+        // Load group standings and determine qualified teams
+        const standings = await getGroupStandings(tournamentId);
+        if (!standings) {
+          setLoading(false);
+          return;
+        }
+
+        // Qualification Rules:
+        // - ALL 1st place teams from all groups
+        // - ALL 2nd place teams from all groups
+        // - Best 2 third place teams (sorted by: 1. points, 2. goal difference)
+        const topTwoTeams = [];
+        const thirdPlaceTeams = [];
+
+        standings.forEach((group) => {
+          const sortedTeams = sortTeamsByRanking(group.teams);
+
+          // Add ALL 1st place teams
+          if (sortedTeams[0]) {
+            topTwoTeams.push({
+              ...sortedTeams[0],
+              groupName: group.groupName,
+              position: 1,
+            });
+          }
+          // Add ALL 2nd place teams
+          if (sortedTeams[1]) {
+            topTwoTeams.push({
+              ...sortedTeams[1],
+              groupName: group.groupName,
+              position: 2,
+            });
+          }
+
+          // Collect all 3rd place teams for comparison
+          if (sortedTeams[2]) {
+            thirdPlaceTeams.push({
+              ...sortedTeams[2],
+              groupName: group.groupName,
+              position: 3,
+            });
+          }
+        });
+
+        // Sort 3rd place teams by points and goal difference, then take best 2
+        const bestThirdPlace = sortThirdPlaceTeams(thirdPlaceTeams).slice(0, 2);
+
+        // Combine all qualified teams (1st + 2nd from all groups + best 2 third place)
+        const qualified = [...topTwoTeams, ...bestThirdPlace];
+        setQualifiedTeams(qualified);
+
         // Load knockout matches if they exist
         const saved = await getKnockoutMatches(tournamentId);
         if (saved) {
@@ -111,78 +242,59 @@ function KnockoutStage() {
             runnerUp: saved.runnerUp || null,
             thirdPlaceWinner: saved.thirdPlaceWinner || null,
           });
-        }
+        } else if (qualified.length >= 8) {
+          // Initialize quarterfinals if no saved matches and we have enough qualified teams
+          const newMatches = {
+            quarterfinals: Array(4)
+              .fill(null)
+              .map((_, i) => ({
+                id: `qf${i + 1}`,
+                homeTeam: null,
+                awayTeam: null,
+                homeGoals: null,
+                awayGoals: null,
+                winner: null,
+              })),
+            semifinals: Array(2)
+              .fill(null)
+              .map((_, i) => ({
+                id: `sf${i + 1}`,
+                homeTeam: null,
+                awayTeam: null,
+                homeGoals: null,
+                awayGoals: null,
+                winner: null,
+              })),
+            final: {
+              id: "final",
+              homeTeam: null,
+              awayTeam: null,
+              homeGoals: null,
+              awayGoals: null,
+              winner: null,
+            },
+            thirdPlace: {
+              id: "thirdPlace",
+              homeTeam: null,
+              awayTeam: null,
+              homeGoals: null,
+              awayGoals: null,
+              winner: null,
+            },
+            champion: null,
+            runnerUp: null,
+            thirdPlaceWinner: null,
+          };
 
-        // Load group standings and determine qualified teams
-        const standings = await getGroupStandings(tournamentId);
-        if (!standings) {
-          setLoading(false);
-          return;
-        }
+          // Create quarterfinal matchups using pot system (avoiding same group)
+          const matchups = createBracketMatchups(qualified);
 
-        const parsedStandings = standings;
-
-        // Get top 2 from each group
-        const topTwoTeams = [];
-        const thirdPlaceTeams = [];
-
-        parsedStandings.forEach((group) => {
-          const sortedTeams = sortTeamsByRanking(group.teams);
-
-          // Add top 2 teams
-          if (sortedTeams[0]) {
-            topTwoTeams.push({
-              ...sortedTeams[0],
-              groupName: group.groupName,
-              position: 1,
-            });
-          }
-          if (sortedTeams[1]) {
-            topTwoTeams.push({
-              ...sortedTeams[1],
-              groupName: group.groupName,
-              position: 2,
-            });
-          }
-
-          // Store 3rd place team for comparison
-          if (sortedTeams[2]) {
-            thirdPlaceTeams.push({
-              ...sortedTeams[2],
-              groupName: group.groupName,
-              position: 3,
-            });
-          }
-        });
-
-        // Sort 3rd place teams and take best 2
-        const bestThirdPlace = sortTeamsByRanking(thirdPlaceTeams).slice(0, 2);
-
-        // Combine all qualified teams
-        const qualified = [...topTwoTeams, ...bestThirdPlace];
-        setQualifiedTeams(qualified);
-
-        // Initialize quarterfinals if not already set and no saved matches
-        if (
-          qualified.length === 8 &&
-          !saved &&
-          !knockoutMatches.quarterfinals[0].homeTeam
-        ) {
-          // Set up initial bracket matchups
-          const newMatches = { ...knockoutMatches };
-
-          // Quarterfinal matchups (can be customized based on seeding rules)
-          newMatches.quarterfinals[0].homeTeam = qualified[0];
-          newMatches.quarterfinals[0].awayTeam = qualified[7];
-
-          newMatches.quarterfinals[1].homeTeam = qualified[1];
-          newMatches.quarterfinals[1].awayTeam = qualified[6];
-
-          newMatches.quarterfinals[2].homeTeam = qualified[2];
-          newMatches.quarterfinals[2].awayTeam = qualified[5];
-
-          newMatches.quarterfinals[3].homeTeam = qualified[3];
-          newMatches.quarterfinals[3].awayTeam = qualified[4];
+          matchups.forEach((matchup, index) => {
+            if (index < 4) {
+              newMatches.quarterfinals[index].homeTeam = matchup.home;
+              newMatches.quarterfinals[index].awayTeam = matchup.away;
+            }
+          });
 
           setKnockoutMatches(newMatches);
         }
@@ -445,7 +557,7 @@ function KnockoutStage() {
     setSelectedMatch(null);
   };
 
-  const resetKnockout = () => {
+  const resetKnockout = async () => {
     if (!isAuthenticated) {
       alert("Please sign in as admin to reset knockout stage");
       return;
@@ -453,47 +565,132 @@ function KnockoutStage() {
 
     if (
       window.confirm(
-        "Are you sure you want to reset all knockout stage results?"
+        "Are you sure you want to reset all knockout stage results and reload qualified teams?"
       )
     ) {
-      const resetMatches = {
-        quarterfinals: knockoutMatches.quarterfinals.map((m) => ({
-          ...m,
-          homeGoals: null,
-          awayGoals: null,
-          winner: null,
-        })),
-        semifinals: Array(2)
-          .fill(null)
-          .map((_, i) => ({
-            id: `sf${i + 1}`,
+      try {
+        const tournamentId = getTournamentId(currentUser);
+        if (!tournamentId) return;
+
+        // Reload current group standings to get fresh qualified teams
+        const standings = await getGroupStandings(tournamentId);
+        if (!standings) {
+          alert(
+            "No group standings found. Please complete the group stage first."
+          );
+          return;
+        }
+
+        // Get top 2 from each group
+        const topTwoTeams = [];
+        const thirdPlaceTeams = [];
+
+        standings.forEach((group) => {
+          const sortedTeams = sortTeamsByRanking(group.teams);
+
+          // Add ALL 1st place teams
+          if (sortedTeams[0]) {
+            topTwoTeams.push({
+              ...sortedTeams[0],
+              groupName: group.groupName,
+              position: 1,
+            });
+          }
+          // Add ALL 2nd place teams
+          if (sortedTeams[1]) {
+            topTwoTeams.push({
+              ...sortedTeams[1],
+              groupName: group.groupName,
+              position: 2,
+            });
+          }
+
+          // Collect all 3rd place teams for comparison
+          if (sortedTeams[2]) {
+            thirdPlaceTeams.push({
+              ...sortedTeams[2],
+              groupName: group.groupName,
+              position: 3,
+            });
+          }
+        });
+
+        // Sort 3rd place teams by points and goal difference, then take best 2
+        const bestThirdPlace = sortThirdPlaceTeams(thirdPlaceTeams).slice(0, 2);
+
+        // Combine all qualified teams (1st + 2nd from all groups + best 2 third place)
+        const qualified = [...topTwoTeams, ...bestThirdPlace];
+
+        if (qualified.length < 8) {
+          alert(
+            `Only ${qualified.length} teams qualified. Need at least 8 teams for knockout stage.`
+          );
+          return;
+        }
+
+        // Set up fresh bracket with new qualified teams
+        const resetMatches = {
+          quarterfinals: Array(4)
+            .fill(null)
+            .map((_, i) => ({
+              id: `qf${i + 1}`,
+              homeTeam: null,
+              awayTeam: null,
+              homeGoals: null,
+              awayGoals: null,
+              winner: null,
+            })),
+          semifinals: Array(2)
+            .fill(null)
+            .map((_, i) => ({
+              id: `sf${i + 1}`,
+              homeTeam: null,
+              awayTeam: null,
+              homeGoals: null,
+              awayGoals: null,
+              winner: null,
+            })),
+          final: {
+            id: "final",
             homeTeam: null,
             awayTeam: null,
             homeGoals: null,
             awayGoals: null,
             winner: null,
-          })),
-        final: {
-          id: "final",
-          homeTeam: null,
-          awayTeam: null,
-          homeGoals: null,
-          awayGoals: null,
-          winner: null,
-        },
-        thirdPlace: {
-          id: "thirdPlace",
-          homeTeam: null,
-          awayTeam: null,
-          homeGoals: null,
-          awayGoals: null,
-          winner: null,
-        },
-        champion: null,
-        runnerUp: null,
-        thirdPlaceWinner: null,
-      };
-      setKnockoutMatches(resetMatches);
+          },
+          thirdPlace: {
+            id: "thirdPlace",
+            homeTeam: null,
+            awayTeam: null,
+            homeGoals: null,
+            awayGoals: null,
+            winner: null,
+          },
+          champion: null,
+          runnerUp: null,
+          thirdPlaceWinner: null,
+        };
+
+        // Create quarterfinal matchups using pot system (avoiding same group)
+        const matchups = createBracketMatchups(qualified);
+
+        matchups.forEach((matchup, index) => {
+          if (index < 4) {
+            resetMatches.quarterfinals[index].homeTeam = matchup.home;
+            resetMatches.quarterfinals[index].awayTeam = matchup.away;
+          }
+        });
+
+        setKnockoutMatches(resetMatches);
+        setQualifiedTeams(qualified);
+
+        alert(
+          "Knockout stage reset successfully with updated qualified teams!"
+        );
+      } catch (error) {
+        console.error("Error resetting knockout stage:", error);
+        alert("Error resetting knockout stage. Please try again.");
+      }
     }
   };
 
@@ -668,7 +865,7 @@ function KnockoutStage() {
             </Button>
             {isAuthenticated && (
               <Button onClick={resetKnockout} variant="danger">
-                Reset Knockout
+                Reset & Reload Bracket
               </Button>
             )}
           </div>
@@ -677,6 +874,14 @@ function KnockoutStage() {
         {/* Bracket */}
         <div className="bracket-section">
           <h3>Tournament Bracket</h3>
+
+          <div className="bracket-explanation">
+            <p>
+              <strong>Seeding System:</strong> Teams are divided into Pot 1 (all
+              1st place + best 2nd place) and Pot 2 (remaining teams). Matchups
+              avoid teams from the same group.
+            </p>
+          </div>
 
           <div className="bracket-container">
             {/* Left Quarterfinals */}

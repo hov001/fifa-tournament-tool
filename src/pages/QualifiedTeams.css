@@ -126,6 +126,70 @@
   color: #4caf50;
 }
 
+/* Pot Sections */
+.pot1-section {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.08) 0%,
+    rgba(255, 215, 0, 0.03) 100%
+  );
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.pot1-section:hover {
+  box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3);
+}
+
+.pot1-section .stage-header h3 {
+  color: #ffd700;
+}
+
+.pot2-section {
+  background: linear-gradient(
+    135deg,
+    rgba(100, 149, 237, 0.08) 0%,
+    rgba(100, 149, 237, 0.03) 100%
+  );
+  border-color: rgba(100, 149, 237, 0.3);
+}
+
+.pot2-section:hover {
+  box-shadow: 0 8px 32px rgba(100, 149, 237, 0.3);
+}
+
+.pot2-section .stage-header h3 {
+  color: #6495ed;
+}
+
+/* Pots Explanation */
+.pots-explanation {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.pots-explanation p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.pots-explanation strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.pots-explanation .note {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.7);
+}
+
 /* Stage Header */
 .stage-header {
   display: flex;
@@ -210,6 +274,13 @@
   text-align: center;
 }
 
+.team-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
 .group-badge {
   background: rgba(255, 255, 255, 0.15);
   color: var(--text-primary);
@@ -217,6 +288,40 @@
   border-radius: 12px;
   font-size: 0.85rem;
   font-weight: 600;
+}
+
+.position-badge {
+  background: rgba(100, 149, 237, 0.25);
+  color: #6495ed;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid rgba(100, 149, 237, 0.3);
+}
+
+.pot-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid;
+}
+
+.pot-badge.pot-1 {
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffd700;
+  border-color: rgba(255, 215, 0, 0.4);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.pot-badge.pot-2 {
+  background: rgba(100, 149, 237, 0.2);
+  color: #6495ed;
+  border-color: rgba(100, 149, 237, 0.4);
+  box-shadow: 0 0 10px rgba(100, 149, 237, 0.3);
 }
 
 /* Responsive Design */
