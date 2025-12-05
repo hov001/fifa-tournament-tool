@@ -40,7 +40,6 @@
 
 /* Stage Sections */
 .stage-section {
-  margin-bottom: 3rem;
   padding: 2rem;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.03);
@@ -161,6 +160,22 @@
   color: #6495ed;
 }
 
+/* Pots Container - Display pots in a row */
+.pots-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.pots-container .stage-section {
+  margin-bottom: 0;
+}
+
+.pots-container .stage-section:hover {
+  transform: translateY(-2px);
+}
+
 /* Pots Explanation */
 .pots-explanation {
   background: rgba(255, 255, 255, 0.05);
@@ -220,7 +235,7 @@
 /* Teams Grid */
 .teams-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1.5rem;
 }
 
@@ -329,6 +344,11 @@
   .header-section {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .pots-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
 
   .stage-header {

@@ -5,7 +5,7 @@ import Button from "../components/Button";
 import Container from "../components/Container";
 import Avatar from "../components/Avatar";
 import ClubLogo from "../components/ClubLogo";
-import { getKnockoutMatches, getGroupStandings } from "../firebase/dbService";
+import { getGroupStandings } from "../firebase/dbService";
 import { getTournamentId } from "../utils/tournamentContext";
 import "./QualifiedTeams.css";
 
@@ -13,9 +13,6 @@ function QualifiedTeams() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [teamsByStage, setTeamsByStage] = useState({
-    finals: [],
-    semifinals: [],
-    quarterfinals: [],
     qualified: [],
     pot1: [],
     pot2: [],
@@ -29,19 +26,13 @@ function QualifiedTeams() {
         return;
       }
 
-      let knockoutMatches = {};
-      let standings = [];
-
       // Load from Firestore
       try {
-        knockoutMatches = (await getKnockoutMatches(tournamentId)) || {};
-        standings = (await getGroupStandings(tournamentId)) || [];
-      } catch (error) {
-        console.error("Error loading from Firestore:", error);
-        return;
-      }
+        const standings = (await getGroupStandings(tournamentId)) || [];
 
-      try {
+        if (!standings || standings.length === 0) {
+          return;
+        }
         // Helper to sort teams by tournament rules
         const sortTeamsByRanking = (teams) => {
           return [...teams].sort((a, b) => {
@@ -126,39 +117,12 @@ function QualifiedTeams() {
           }
         });
 
-        // Organize teams by stage
+        // Organize teams by pots
         const stages = {
-          finals: [],
-          semifinals: [],
-          quarterfinals: [],
           qualified: allQualified,
           pot1: pot1,
           pot2: pot2,
         };
-
-        // Finals teams - only the 2 finalists
-        if (knockoutMatches.final?.homeTeam) {
-          stages.finals.push(knockoutMatches.final.homeTeam);
-        }
-        if (knockoutMatches.final?.awayTeam) {
-          stages.finals.push(knockoutMatches.final.awayTeam);
-        }
-
-        // Semifinals teams (quarterfinalists winners)
-        if (knockoutMatches.semifinals) {
-          knockoutMatches.semifinals.forEach((match) => {
-            if (match.homeTeam) stages.semifinals.push(match.homeTeam);
-            if (match.awayTeam) stages.semifinals.push(match.awayTeam);
-          });
-        }
-
-        // Quarterfinals teams
-        if (knockoutMatches.quarterfinals) {
-          knockoutMatches.quarterfinals.forEach((match) => {
-            if (match.homeTeam) stages.quarterfinals.push(match.homeTeam);
-            if (match.awayTeam) stages.quarterfinals.push(match.awayTeam);
-          });
-        }
 
         setTeamsByStage(stages);
       } catch (error) {
@@ -194,7 +158,7 @@ function QualifiedTeams() {
     <div className="qualified-teams-page">
       <Container>
         <div className="header-section">
-          <h2>Qualified Teams by Stage</h2>
+          <h2>Qualified Teams - Seeding Pots</h2>
           <div className="header-actions">
             <Button onClick={() => navigate("/knockout")} variant="primary">
               Go to Knockout Stage
@@ -202,73 +166,22 @@ function QualifiedTeams() {
           </div>
         </div>
 
-        {/* Finals */}
-        {teamsByStage.finals.length > 0 && (
-          <div className="stage-section finals-section">
-            <div className="stage-header">
-              <h3>🏆 Finals</h3>
-              <span className="team-count">
-                {teamsByStage.finals.length} Teams
-              </span>
-            </div>
-            <div className="teams-grid">
-              {teamsByStage.finals.map((team, index) =>
-                renderTeamCard(team, index)
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Semifinals */}
-        {teamsByStage.semifinals.length > 0 && (
-          <div className="stage-section semifinals-section">
-            <div className="stage-header">
-              <h3>🥈 Semifinals</h3>
-              <span className="team-count">
-                {teamsByStage.semifinals.length} Teams
-              </span>
-            </div>
-            <div className="teams-grid">
-              {teamsByStage.semifinals.map((team, index) =>
-                renderTeamCard(team, index)
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Quarterfinals */}
-        {teamsByStage.quarterfinals.length > 0 && (
-          <div className="stage-section quarterfinals-section">
-            <div className="stage-header">
-              <h3>🥉 Quarterfinals</h3>
-              <span className="team-count">
-                {teamsByStage.quarterfinals.length} Teams
-              </span>
-            </div>
-            <div className="teams-grid">
-              {teamsByStage.quarterfinals.map((team, index) =>
-                renderTeamCard(team, index)
-              )}
-            </div>
-          </div>
-        )}
-
         {/* All Qualified Teams - Show Pots */}
-        {teamsByStage.qualified.length > 0 &&
-          teamsByStage.quarterfinals.length === 0 && (
-            <>
-              <div className="pots-explanation">
-                <p>
-                  <strong>Pot 1:</strong> All 1st place teams + Best 2nd place (by points, goal difference)
-                </p>
-                <p>
-                  <strong>Pot 2:</strong> Remaining 2nd place teams + Best 3rd place teams
-                </p>
-                <p className="note">
-                  Teams from the same group will not face each other in quarterfinals
-                </p>
-              </div>
+        {teamsByStage.qualified.length > 0 ? (
+          <>
+            <div className="pots-explanation">
+              <p>
+                <strong>Pot 1 (Seeded):</strong> All 1st place teams from each group + Best 2nd place team (by points, then goal difference)
+              </p>
+              <p>
+                <strong>Pot 2:</strong> Remaining 2nd place teams + Best two 3rd place teams
+              </p>
+              <p className="note">
+                ⚽ Teams from the same group will not face each other in quarterfinals
+              </p>
+            </div>
 
+            <div className="pots-container">
               {/* Pot 1 */}
               {teamsByStage.pot1.length > 0 && (
                 <div className="stage-section pot1-section">
@@ -302,10 +215,9 @@ function QualifiedTeams() {
                   </div>
                 </div>
               )}
-            </>
-          )}
-
-        {teamsByStage.qualified.length === 0 && (
+            </div>
+          </>
+        ) : (
           <div className="empty-state">
             <p>Complete the group stage first to see qualified teams!</p>
             <Button onClick={() => navigate("/tournament")} variant="primary">

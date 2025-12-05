@@ -95,6 +95,16 @@ function KnockoutStage() {
     });
   };
 
+  // Helper function to shuffle an array (Fisher-Yates algorithm)
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
   // Helper function to create knockout bracket with pot system
   // Pot 1: 1st from each group + best 2nd place (by points, then goal diff)
   // Pot 2: Remaining qualified teams
@@ -108,11 +118,11 @@ function KnockoutStage() {
     // Sort 2nd place teams to find the best one
     const sortedSecondPlace = sortTeamsByRanking(secondPlaceTeams);
 
-    // Pot 1: All 1st place + best 2nd place
-    const pot1 = [...firstPlaceTeams, sortedSecondPlace[0]];
+    // Pot 1: All 1st place + best 2nd place (shuffled for random matchups)
+    const pot1 = shuffleArray([...firstPlaceTeams, sortedSecondPlace[0]]);
 
-    // Pot 2: Remaining 2nd place + 3rd place teams
-    const pot2 = [...sortedSecondPlace.slice(1), ...thirdPlaceTeams];
+    // Pot 2: Remaining 2nd place + 3rd place teams (shuffled for random matchups)
+    const pot2 = shuffleArray([...sortedSecondPlace.slice(1), ...thirdPlaceTeams]);
 
     console.log(
       "Pot 1:",
