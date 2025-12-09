@@ -733,7 +733,7 @@ function KnockoutStage() {
                     name: match.homeTeam.club,
                     logo: match.homeTeam.clubLogo,
                   }}
-                  size="small"
+                  size="large"
                 />
                 <Avatar
                   participant={{
@@ -741,7 +741,7 @@ function KnockoutStage() {
                     avatar: match.homeTeam.avatar,
                     customImage: match.homeTeam.customImage,
                   }}
-                  size="small"
+                  size="large"
                 />
               </div>
               <div className="team-score">
@@ -791,7 +791,7 @@ function KnockoutStage() {
                     name: match.awayTeam.club,
                     logo: match.awayTeam.clubLogo,
                   }}
-                  size="small"
+                  size="large"
                 />
                 <Avatar
                   participant={{
@@ -799,7 +799,7 @@ function KnockoutStage() {
                     avatar: match.awayTeam.avatar,
                     customImage: match.awayTeam.customImage,
                   }}
-                  size="small"
+                  size="large"
                 />
               </div>
               <div className="team-score">
@@ -1091,7 +1091,7 @@ function KnockoutStage() {
                       name: selectedMatch.homeTeam.club,
                       logo: selectedMatch.homeTeam.clubLogo,
                     }}
-                    size="small"
+                    size="large"
                   />
                   <Avatar
                     participant={{
@@ -1099,7 +1099,7 @@ function KnockoutStage() {
                       avatar: selectedMatch.homeTeam.avatar,
                       customImage: selectedMatch.homeTeam.customImage,
                     }}
-                    size="small"
+                    size="large"
                   />
                   <span>{selectedMatch.homeTeam.participantName}</span>
                 </div>
@@ -1145,7 +1145,7 @@ function KnockoutStage() {
                       name: selectedMatch.awayTeam.club,
                       logo: selectedMatch.awayTeam.clubLogo,
                     }}
-                    size="small"
+                    size="large"
                   />
                   <Avatar
                     participant={{
@@ -1153,7 +1153,7 @@ function KnockoutStage() {
                       avatar: selectedMatch.awayTeam.avatar,
                       customImage: selectedMatch.awayTeam.customImage,
                     }}
-                    size="small"
+                    size="large"
                   />
                   <span>{selectedMatch.awayTeam.participantName}</span>
                 </div>
